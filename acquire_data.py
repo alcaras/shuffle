@@ -5,7 +5,12 @@ import json
 import sqlite3
 import logging
 
-def get_shuffle_leaderboard(spec, c_class, region):
+
+def get_shuffle_leaderboard(spec, c_class, region, retries=0):
+    if retries > 5:
+        print("failed, giving up on %s %s %s" % (spec, c_class, region))
+        return None
+
     # we know this is pvp season 34
     print("getting shuffle leaderboard")
     
@@ -14,13 +19,15 @@ def get_shuffle_leaderboard(spec, c_class, region):
     mode = "shuffle"
     ladder = "%s-%s-%s" % (mode, c_class.replace(" ", "").lower(), spec.replace(" ", "").lower())
     print(ladder)
+    if retries > 0:
+        print("retry #%d" % retries)
     
-    # not sure why tw doesn't work, have to hit the us first?
-    leaderboard = api_client.wow.game_data.get_pvp_leaderboard(region, "en-US", 34, ladder)
-    # ultimately we want to store ... fetches
+    try:
+        leaderboard = api_client.wow.game_data.get_pvp_leaderboard(region, "en-US", 34, ladder)
+    except json.decoder.JSONDecodeError:
+        # try again
+        return get_shuffle_leaderboard(spec, c_class, region, retries+1)
 
- 
-    #
     conn = sqlite3.connect('shuffle.db')
     c = conn.cursor()
     
