@@ -5,13 +5,14 @@ import json
 import sqlite3
 import logging
 
+# 
+PVP_SEASON = 34
 
 def get_shuffle_leaderboard(spec, c_class, region, retries=0):
     if retries > 5:
         print("failed, giving up on %s %s %s" % (spec, c_class, region))
         return None
 
-    # we know this is pvp season 34
     print("getting shuffle leaderboard")
     
     api_client = BlizzardApi(client_id, client_secret)
@@ -21,9 +22,9 @@ def get_shuffle_leaderboard(spec, c_class, region, retries=0):
     print(ladder)
     if retries > 0:
         print("retry #%d" % retries)
-    
+
     try:
-        leaderboard = api_client.wow.game_data.get_pvp_leaderboard(region, "en-US", 34, ladder)
+        leaderboard = api_client.wow.game_data.get_pvp_leaderboard(region, "en-US", PVP_SEASON, ladder)
     except json.decoder.JSONDecodeError:
         # try again
         return get_shuffle_leaderboard(spec, c_class, region, retries+1)
